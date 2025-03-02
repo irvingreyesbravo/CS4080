@@ -2,6 +2,9 @@ import pytest
 import networkx as nx
 from main import create_graph, get_random_nodes, find_shortest_path
 import time
+from tnr import ContractionHierarchyTNR
+import copy
+from memory_profiler import memory_usage
 
 
 @pytest.fixture
@@ -28,21 +31,20 @@ def test_shortest_path_validity(graph):
     # Get random nodes and find path
     orig, dest = get_random_nodes(graph)
     route = find_shortest_path(graph, orig, dest)
-    
+
     # Test path properties
     assert isinstance(route, list)
     assert len(route) > 1
-    
+
     # Test connectivity of consecutive nodes in path
     for i in range(len(route) - 1):
-        assert (graph.has_edge(route[i], route[i + 1]) or 
+        assert (graph.has_edge(route[i], route[i + 1]) or
                 graph.has_edge(route[i + 1], route[i])), \
-            f"Nodes {route[i]} and {route[i+1]} should be connected"
+            f"Nodes {route[i]} and {route[i + 1]} should be connected"
 
 
 def test_tnr_vs_dijkstra(graph):
     """Ensure CH-TNR produces distances close to Dijkstra's algorithm"""
-    from tnr import ContractionHierarchyTNR
 
     orig, dest = get_random_nodes(graph)
 
@@ -64,7 +66,6 @@ def test_tnr_vs_dijkstra(graph):
 
 def test_tnr_query_valid_distance(graph):
     """Ensure CH-TNR query returns a valid positive finite distance"""
-    from tnr import ContractionHierarchyTNR
 
     orig, dest = get_random_nodes(graph)
 
@@ -79,7 +80,6 @@ def test_tnr_query_valid_distance(graph):
 
 def test_tnr_uses_transit_nodes(graph):
     """Ensure transit nodes are selected and used in CH-TNR"""
-    from tnr import ContractionHierarchyTNR
 
     ch_tnr = ContractionHierarchyTNR(graph)
     ch_tnr.preprocess(cell_size=0.01)
@@ -98,8 +98,6 @@ def test_tnr_uses_transit_nodes(graph):
 
 def test_graph_integrity_after_ch_preprocessing(graph):
     """Ensure CH preprocessing does not alter the original graph structure"""
-    from tnr import ContractionHierarchyTNR
-    import copy
 
     original_graph = copy.deepcopy(graph)
 
@@ -112,7 +110,6 @@ def test_graph_integrity_after_ch_preprocessing(graph):
 
 def test_tnr_unreachable_nodes(graph):
     """Ensure CH-TNR returns infinity for disconnected nodes"""
-    from tnr import ContractionHierarchyTNR
 
     # Create a disconnected graph (manually remove edges)
     disconnected_graph = graph.copy()
@@ -132,7 +129,6 @@ def test_tnr_unreachable_nodes(graph):
 
 def test_tnr_preprocessing_time(graph):
     """Measure and ensure CH-TNR preprocessing completes within a reasonable time"""
-    from tnr import ContractionHierarchyTNR
 
     ch_tnr = ContractionHierarchyTNR(graph)
 
@@ -149,13 +145,17 @@ def test_tnr_preprocessing_time(graph):
 
 def test_tnr_query_time_vs_dijkstra(graph):
     """Compare CH-TNR query time against Dijkstra"""
-    from tnr import ContractionHierarchyTNR
-
-    orig, dest = get_random_nodes(graph)
+    i = 0
+    node_pairs = []
+    while i < 10:
+        orig, dest = get_random_nodes(graph)
+        node_pairs.append((orig, dest))
+        i += 1
 
     # Measure Dijkstra execution time
     start_time = time.time()
-    _ = nx.shortest_path_length(graph, source=orig, target=dest, weight="length")
+    for j in node_pairs:
+        _ = nx.shortest_path_length(graph, source=j[0], target=j[1], weight="length")  # origin, dest
     dijkstra_time = time.time() - start_time
 
     # Preprocess CH-TNR
@@ -164,19 +164,19 @@ def test_tnr_query_time_vs_dijkstra(graph):
 
     # Measure CH-TNR query time
     start_time = time.time()
-    _ = ch_tnr.query(orig, dest)
+    for k in node_pairs:
+        _ = ch_tnr.query(k[0], k[1])  # origin, dest
     tnr_time = time.time() - start_time
 
     print(f"Dijkstra Time: {dijkstra_time:.6f} seconds")
     print(f"CH-TNR Time: {tnr_time:.6f} seconds")
 
     # Ensure CH-TNR is significantly faster
-    assert tnr_time < dijkstra_time, "CH-TNR query is slower than Dijkstra!"
+    assert tnr_time <= dijkstra_time, "CH-TNR query is slower than Dijkstra!"
 
 
 def test_tnr_bulk_queries(graph):
     """Stress test CH-TNR query performance on multiple origin-destination pairs"""
-    from tnr import ContractionHierarchyTNR
 
     ch_tnr = ContractionHierarchyTNR(graph)
     ch_tnr.preprocess(cell_size=0.01)
@@ -204,3 +204,23 @@ def test_path_endpoints(graph):
     route = find_shortest_path(graph, orig, dest)
     assert route[0] == orig
     assert route[-1] == dest
+
+
+def test_tnr_memory_usage(graph):
+    """Measure CH-TNR preprocessing memory consumption"""
+    from tnr import ContractionHierarchyTNR
+
+    def preprocess():
+        ch_tnr = ContractionHierarchyTNR(graph)
+        ch_tnr.preprocess(cell_size=0.01)
+
+    mem_before = memory_usage(-1, interval=0.1, timeout=1)[0]  # Get initial memory
+    mem_during = memory_usage(preprocess, interval=0.1)  # Measure during execution
+    mem_after = memory_usage(-1, interval=0.1, timeout=1)[0]  # After execution
+
+    max_mem_used = max(mem_during) - mem_before
+
+    print(f"CH-TNR Memory Usage: {max_mem_used:.2f} MB")
+
+    # Ensure memory usage is reasonable (adjust threshold based on dataset size)
+    assert max_mem_used < 500, "CH-TNR preprocessing used too much memory!"

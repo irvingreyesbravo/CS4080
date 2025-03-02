@@ -68,6 +68,10 @@ def create_graph():
     # Download the road network for driving
     G = ox.graph_from_place(place_name, network_type="drive")
 
+    # Convert to strongly connected component to ensure paths exist
+    largest_cc = max(nx.strongly_connected_components(G), key=len)
+    G = G.subgraph(largest_cc).copy()
+
     return G
 
 
