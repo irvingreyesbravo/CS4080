@@ -5,6 +5,8 @@ import time
 from tnr import ContractionHierarchyTNR
 import copy
 from memory_profiler import memory_usage
+import matplotlib
+matplotlib.use('Agg')  # Use non-GUI backend before importing osmnx
 
 
 @pytest.fixture
@@ -45,6 +47,7 @@ def test_shortest_path_validity(graph):
 
 def test_tnr_vs_dijkstra(graph):
     """Ensure CH-TNR produces distances close to Dijkstra's algorithm"""
+    from tnr import ContractionHierarchyTNR
 
     orig, dest = get_random_nodes(graph)
 
@@ -58,8 +61,12 @@ def test_tnr_vs_dijkstra(graph):
     # Compute CH-TNR distance
     tnr_distance = ch_tnr.query(orig, dest)
 
-    # Allow a small tolerance due to CH approximations
-    tolerance = 0.1  # Adjust based on expected precision
+    print(f"Dijkstra Distance: {dijkstra_distance}")
+    print(f"CH-TNR Distance: {tnr_distance}")
+    print(f"Difference: {abs(dijkstra_distance - tnr_distance)}")
+
+    # Increase tolerance to see if it helps
+    tolerance = 0.1
     assert abs(dijkstra_distance - tnr_distance) / dijkstra_distance < tolerance, \
         f"CH-TNR distance {tnr_distance} deviates too much from Dijkstra {dijkstra_distance}"
 
