@@ -1,51 +1,61 @@
 # CS4080
 Coursework for CS 4080
-# TNR Program Tool
 
-## Overview
-This program downloads a road network graph for a specified location using OpenStreetMap data and computes the shortest path between two randomly selected nodes using **Dijkstra's Algorithm**. The program also visualizes the graph and the computed shortest path.
+# **Transit Node Routing with Contraction Hierarchies**  
 
-Additionally, **automated tests** using `pytest` verify the correctness of the graph structure and shortest path calculations.
+This project implements and evaluates **Transit Node Routing (TNR)** in combination with **Contraction Hierarchies (CH)** to optimize shortest-path queries on large road networks. The goal is to compare different heuristics for CH preprocessing and assess the efficiency of TNR in terms of query time and memory usage.  
 
-## Features
-- Fetches a road network from **OpenStreetMap** for a specified location.
-- Uses **NetworkX** to compute the shortest path based on road lengths.
-- Randomly selects two nodes (origin & destination) from the graph.
-- Plots the road network and highlights the computed shortest path.
-- Runs **pytest** automatically to validate correctness.
+## **Project Overview**  
 
-## Installation
-### Prerequisites
-Ensure you have **Python 3.7+** installed along with the following dependencies:
-```sh
-pip install osmnx networkx matplotlib pytest
-```
+Shortest-path computations are a fundamental problem in graph-based navigation, particularly in road networks. While **Dijkstra’s algorithm** guarantees optimal results, it is computationally expensive for large graphs. Contraction Hierarchies (CH) improve performance by precomputing shortcuts, and Transit Node Routing (TNR) further enhances query efficiency by precomputing paths between strategically chosen "transit nodes."  
 
-## Usage
-Simply run the script:
-```sh
-python script.py
-```
-This will:
-1. Download the road network.
-2. Compute and display the shortest path.
-3. Run the test cases automatically.
+This project systematically explores:  
+- **CH with different node ordering heuristics**, including **rank-by-degree** and **edge-difference**.  
+- **TNR implementation**, validating its correctness against Dijkstra’s algorithm.  
+- **Performance evaluation**, comparing query times and memory overhead between CH and TNR.  
 
-## Automated Testing
-The script integrates **pytest** to validate core functionalities. The following tests are included:
+## **Implementation Details**  
 
-### Test Cases
-| Test Name                 | Description |
-|---------------------------|-------------|
-| `test_graph_not_empty`    | Ensures the graph has nodes and edges. |
-| `test_random_nodes_exist` | Verifies that randomly chosen nodes exist in the graph. |
-| `test_shortest_path_validity` | Ensures the computed shortest path is valid and continuous. |
+The project is structured into three key components:  
 
-### Running Tests Manually
-If you want to run the tests separately, use:
-```sh
-pytest -v script.py
-```
+### **1. Graph Representation**  
+- Uses **`networkx.MultiDiGraph`** to model road networks with multiple directed edges.  
+- Supports realistic graphs, enabling comparison of preprocessing and query times.  
+
+### **2. Contraction Hierarchies (CH)**  
+- Implements **node contraction** with heuristics to determine the best order of contraction.  
+- Generates **shortcut edges** to maintain shortest-path consistency.  
+
+### **3. Transit Node Routing (TNR)**  
+- Identifies **highway-like transit nodes** for precomputed long-distance routing.  
+- Implements efficient query logic:  
+  - If both nodes are close, fallback to CH.  
+  - Otherwise, use precomputed transit paths.  
+
+## **Testing and Validation**  
+
+The test suite, implemented with **`pytest`**, verifies correctness, performance, and memory usage. The key tests include:  
+
+- **Correctness Tests:** Ensure that CH and TNR return the same shortest-path distances as Dijkstra.  
+- **Performance Tests:** Measure **query time** and **memory footprint** during preprocessing and execution.  
+- **Graph Structure Tests:** Validate node ordering and shortcut correctness in CH.  
+
+Additional tools:  
+- **`memory_profiler`** tracks memory usage.  
+- **`matplotlib`** visualizes graph structures.  
+
+## **How to Run the Tests**  
+
+Clone the repository and install dependencies:  
+```bash
+git clone https://github.com/IRB3020/CS4080.git
+cd CS4080
+pip install -r requirements.txt
+```  
+Run the test suite with:  
+```bash
+pytest tests.py
+```  
 
 ## Customization
 - To test a different city, change the `place_name` variable in `script.py`:
@@ -63,3 +73,9 @@ pytest -v script.py
 
 ## License
 This project is open-source and available for modification.
+
+
+## **Future Work**  
+- Implement dynamic updates to CH and TNR.  
+- Extend testing to larger road-network datasets.  
+- Investigate hybrid techniques combining CH, TNR, and A*.
