@@ -27,7 +27,39 @@ def policy_no_successes_after_two_rolls(successes, failures, rolls):
     return len(rolls) == 2 and successes == 0
 
 
-# Function that simulates each policy 10,000 times
+# Recursive Expected Value Policy:
+ev_cache = {}
+
+
+def expected_value(successes, failures):
+    if (successes, failures) in ev_cache:
+        return ev_cache[(successes, failures)]
+
+    if successes >= 3:
+        return 0.5
+    if failures >= 3:
+        return 0.0
+
+    p_nat1 = 1 / 20
+    p_nat20 = 1 / 20
+    p_fail = 8 / 20
+    p_success = 10 / 20
+
+    ev = (
+        p_nat1 * 0 +
+        p_nat20 * 0.5 +
+        p_fail * expected_value(successes, failures + 1) +
+        p_success * expected_value(successes + 1, failures)
+    )
+    ev_cache[(successes, failures)] = ev
+    return ev
+
+
+def dynamic_policy(successes, failures, rolls):
+    return 0.25 >= expected_value(successes, failures)
+
+
+# Simulation Engine:
 def simulate(policy_fn, iterations=10000):
     outcomes = []
     for _ in range(iterations):
@@ -43,15 +75,15 @@ def run_death_save(policy_fn):
 
     while True:
         if policy_fn(successes, failures, rolls):
-            return 0.25  # potion used, early stabilization
+            return 0.25
 
         roll = np.random.choice(d20)
         rolls.append(roll)
 
         if roll == 1:
-            return 0  # nat 1 = death
+            return 0
         elif roll == 20:
-            return 0.5  # nat 20 = instant stabilize
+            return 0.5
         elif roll >= 10:
             successes += 1
             if successes == 3:
@@ -62,13 +94,12 @@ def run_death_save(policy_fn):
                 return 0
 
 
-# Function that displays average HP and outcome rates
 def summarize(outcomes, label):
     count = Counter(outcomes)
     total = len(outcomes)
     avg_hp = sum(outcomes) / total
     print(f"\n--- {label} ---")
-    print(f"Avg HP: {sum(outcomes) / total:.4f}")
+    print(f"Avg HP: {avg_hp:.4f}")
     print(f"Stabilized (0.5): {count[0.5] / total:.2%}")
     print(f"Potion (0.25): {count[0.25] / total:.2%}")
     print(f"Death (0): {count[0] / total:.2%}")
@@ -81,20 +112,20 @@ def summarize(outcomes, label):
     }
 
 
-def plot_results(results_dict):
-    labels = [s['label'] for s in results_dict]
-    avg_hp = [s['avg_hp'] for s in results_dict]
-    stabilized = [s['stabilized'] for s in results_dict]
-    potion = [s['potion'] for s in results_dict]
-    death = [s['death'] for s in results_dict]
+def plot_results(summary_stats):
+    labels = [s['label'] for s in summary_stats]
+    avg_hp = [s['avg_hp'] for s in summary_stats]
+    stabilized = [s['stabilized'] for s in summary_stats]
+    potion = [s['potion'] for s in summary_stats]
+    death = [s['death'] for s in summary_stats]
 
     x = np.arange(len(labels))
     width = 0.25
 
     fig, ax = plt.subplots(figsize=(12, 7))
-    bar1 = ax.bar(x - width, stabilized, width, label='Stabilized (0.5)')
-    bar2 = ax.bar(x, potion, width, label='Potion (0.25)')
-    bar3 = ax.bar(x + width, death, width, label='Death (0)')
+    ax.bar(x - width, stabilized, width, label='Stabilized (0.5)')
+    ax.bar(x, potion, width, label='Potion (0.25)')
+    ax.bar(x + width, death, width, label='Death (0)')
 
     ax.set_ylabel('Proportion of Outcomes')
     ax.set_title('Outcome Distributions by Policy')
@@ -104,7 +135,6 @@ def plot_results(results_dict):
     plt.tight_layout()
     plt.show()
 
-    # Plot average HP
     fig, ax2 = plt.subplots(figsize=(10, 5))
     ax2.bar(labels, avg_hp, color='mediumseagreen')
     ax2.set_ylabel('Average HP')
@@ -114,9 +144,26 @@ def plot_results(results_dict):
     plt.show()
 
 
+def plot_ev_surface():
+    states = [(s, f) for s in range(4) for f in range(4) if s < 3 and f < 3]
+    evs = [expected_value(s, f) for s, f in states]
+    labels = [f"S:{s},F:{f}" for s, f in states]
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+    bars = ax.bar(labels, evs, color='royalblue')
+    ax.axhline(y=0.25, color='red', linestyle='--', label='Potion Value (0.25)')
+    ax.set_ylabel('Expected Value of Continuing')
+    ax.set_title('Expected Value Across Game States')
+    ax.set_xticks(np.arange(len(labels)))
+    ax.set_xticklabels(labels, rotation=45, ha='right')
+    ax.legend()
+    plt.tight_layout()
+    plt.show()
+
+
 if __name__ == '__main__':
     summary_stats = []
-    base_outcomes = simulate(lambda s, f, r: False)  # Never use potion
+    base_outcomes = simulate(lambda s, f, r: False)
     summary_stats.append(summarize(base_outcomes, "No Potion Policy"))
 
     p1_outcomes = simulate(policy_after_two_fails)
@@ -128,5 +175,8 @@ if __name__ == '__main__':
     p3_outcomes = simulate(policy_no_successes_after_two_rolls)
     summary_stats.append(summarize(p3_outcomes, "Potion if No Successes After 2 Rolls"))
 
-    plot_results(summary_stats)
+    p4_outcomes = simulate(dynamic_policy)
+    summary_stats.append(summarize(p4_outcomes, "Dynamic EV-Based Policy"))
 
+    plot_results(summary_stats)
+    plot_ev_surface()
