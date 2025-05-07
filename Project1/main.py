@@ -1,33 +1,69 @@
 import osmnx as ox
 import networkx as nx
 import random
+import time
+import psutil
 from tnr import CHNode, ContractionHierarchyTNR
 
 
 # Small sample plot: Falcon
 
 def main():
+    print("=== LOADING GRAPH ===")
     G = create_graph()
     orig, dest = get_random_nodes(G)
+
+    print("\n=== RUNNING BASELINE SHORTEST PATH (DIJKSTRA) ===")
+    start_dijkstra = time.time()
     route = find_shortest_path(G, orig, dest)
+    end_dijkstra = time.time()
 
     # Calculate the actual distance of the route found by NetworkX
     nx_distance = calculate_path_length(G, route)
     print(f"NetworkX shortest path distance from {orig} to {dest}: {nx_distance}")
 
-    # Create and preprocess CH-TNR
-    ch_tnr = ContractionHierarchyTNR(G)
-    ch_tnr.preprocess(cell_size=0.01)  # Adjust cell size based on your graph scale
+    print(f"Dijkstra's distance from {orig} to {dest}: {nx_distance:.2f} meters")
+    print(f"Query time (Dijkstra): {end_dijkstra - start_dijkstra:.6f} seconds")
 
-    # Query
+    print("\n=== RUNNING CH-TNR PREPROCESSING ===")
+    ch_tnr = ContractionHierarchyTNR(G)
+    start_preprocessing = time.time()
+    ch_tnr.preprocess(cell_size=0.01)  # Adjust cell size as needed
+    end_preprocessing = time.time()
+    print(f"Preprocessing time (CH-TNR): {end_preprocessing - start_preprocessing:.4f} seconds")
+
+    print("\n=== CH-TNR QUERY ===")
+    start_query = time.time()
     ch_tnr_distance = ch_tnr.query(orig, dest)
-    print(f"CH-TNR distance from {orig} to {dest}: {ch_tnr_distance}")
+    end_query = time.time()
+    print(f"CH-TNR distance from {orig} to {dest}: {ch_tnr_distance:.2f} meters")
+    print(f"Query time (CH-TNR): {end_query - start_query:.6f} seconds")
 
     # Compare the results
     difference = abs(nx_distance - ch_tnr_distance)
     percent_diff = (difference / nx_distance) * 100 if nx_distance > 0 else 0
+
+    print("\n=== SHORTEST PATH COMPARISON ===")
+    print(f"From node {orig} to node {dest}")
+    print(f"Dijkstra's distance: {nx_distance:.2f} meters")
+    print(f"CH-TNR distance:     {ch_tnr_distance:.2f} meters")
     print(f"Absolute difference: {difference:.2f} meters")
-    print(f"Percentage difference: {percent_diff:.2f}%")
+    print(f"Relative error:      {percent_diff:.2f}%")
+
+    print("\n=== PERFORMANCE METRICS ===")
+    print(f"Preprocessing time (CH-TNR): {end_preprocessing - start_preprocessing:.4f} seconds")
+    print(f"Query time (Dijkstra):       {end_dijkstra - start_dijkstra:.6f} seconds")
+    print(f"Query time (CH-TNR):         {end_query - start_query:.6f} seconds")
+
+    # Memory usage display
+    process = psutil.Process()
+    mem_usage = process.memory_info().rss / 1024 / 1024
+    print(f"Memory usage: {mem_usage:.2f} MB")
+
+    print("\n=== COMPLEXITY SUMMARY ===")
+    print(" - Dijkstra’s algorithm: O(E + V log V)")
+    print(" - CH-TNR Preprocessing: High upfront cost (depends on contraction order)")
+    print(" - CH-TNR Query:         O(log n) expected (via landmark + overlay graph)")
 
     return G, orig, dest, route
 
@@ -57,7 +93,6 @@ def calculate_path_length(G, path):
                     if 'length' in edge_data[key] and edge_data[key]['length'] < min_length:
                         min_length = edge_data[key]['length']
                 total_length += min_length
-
     return total_length
 
 
