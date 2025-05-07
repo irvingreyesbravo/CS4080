@@ -5,8 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b005a608-15ee-429a-8849-0824b78685e2" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../Project3/graph_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Project3/karger.py" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/../Project3/main.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Project3/metrics.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Project3/results_analysis.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Project1/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Project1/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Project1/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Project1/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Project1/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Project1/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Project3/fingerprinting.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Project3/plot_results.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Project3/primes.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -28,7 +38,8 @@
   &quot;keyToString&quot;: {
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/iurey/Projects/CS4080/Project2&quot;
   }
 }</component>
   <component name="RunManager">
