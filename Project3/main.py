@@ -2,22 +2,33 @@
 # Project 3
 
 import experiments
-import sys
+import results_analysis
 
 
-def main(strategy):
-    if strategy not in ['uniform', 'inverse', 'direct']:
-        print("Invalid strategy. Choose from: 'uniform', 'inverse', 'direct'.")
-        return
+def main():
+    print("Running all strategies...\n")
 
-    print(f"Running {strategy} bias strategy...")
-    experiments.run_experiment(strategy)
+    # Strategies to test
+    strategies = ['uniform', 'direct', 'inverse']
+
+    # Collect metrics for all strategies
+    all_results = {}
+    for strategy in strategies:
+        print(f"Running {strategy} bias strategy...")
+        min_cut_prob, avg_cut_size, runtime_stats = experiments.run_experiment(strategy)
+        all_results[strategy] = {
+            'min_cut_prob': min_cut_prob,
+            'avg_cut_size': avg_cut_size,
+            'runtime_stats': runtime_stats
+        }
+        print(f"Strategy: {strategy}")
+        print(f"Min-Cut Probability: {min_cut_prob}")
+        print(f"Average Cut Size: {avg_cut_size}")
+        print(f"Runtime Stats: {runtime_stats}\n")
+
+    print("\nGenerating visualizations...")
+    results_analysis.analyze_and_visualize(all_results)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python main.py <strategy>")
-        sys.exit(1)
-
-    selected_strategy = sys.argv[1]
-    main(selected_strategy)
+    main()
