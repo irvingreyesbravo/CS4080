@@ -31,9 +31,17 @@ class Timer:
 
     def start(self):
         self.start_time = time.time()
+        self.end_time = None  # Reset end_time on new start
 
     def stop(self):
-        self.end_time = time.time()
+        if self.start_time is not None:
+            self.end_time = time.time()
 
     def elapsed(self):
-        return self.end_time - self.start_time if self.end_time else 0
+        if self.start_time is None:
+            return 0
+        elif self.end_time is not None:
+            return self.end_time - self.start_time
+        else:
+            # If stop() hasn't been called, calculate based on current time
+            return time.time() - self.start_time

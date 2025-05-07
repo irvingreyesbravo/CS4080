@@ -6,7 +6,7 @@ import metrics
 import graph_utils
 
 
-def run_experiment(strategy, num_nodes=10, num_edges=20, num_trials=100):
+def run_experiment(strategy, num_nodes=1000, num_edges=20000, num_trials=5000):
     graph = graph_utils.generate_random_graph(num_nodes, num_edges)
     true_min_cut = karger.karger_min_cut(graph, 'uniform')  # Baseline for comparison
 
