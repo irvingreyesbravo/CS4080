@@ -33,12 +33,18 @@ def main():
         min_runtimes = [run["min"] for run in runtime_stats]
         max_runtimes = [run["max"] for run in runtime_stats]
 
-        # Calculate overall average, min, max runtime stats for bar plot
+        # Calculate overall average, min, max runtime stats for bar plot and cast to float
         all_results[strategy]["runtime_stats"] = {
-            "average": np.mean(avg_runtimes),
-            "min": np.min(min_runtimes),
-            "max": np.max(max_runtimes)
+            "average": float(np.mean(avg_runtimes)),
+            "min": float(np.min(min_runtimes)),
+            "max": float(np.max(max_runtimes))
         }
+
+    # Display the aggregated runtime stats
+    print("\nRuntime Stats (Averaged Across Runs):")
+    for strategy in strategies:
+        stats = all_results[strategy]["runtime_stats"]
+        print(f"{strategy.capitalize()} Strategy - Avg: {stats['average']:.6f}, Min: {stats['min']:.6f}, Max: {stats['max']:.6f}")
 
     # Pass data to results analysis for visualization
     results_analysis.analyze_and_visualize(all_results)
