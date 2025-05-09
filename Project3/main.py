@@ -1,32 +1,46 @@
 # Irving Reyes Bravo
-# Project 3
+# Project 3 - Main
 
 import experiments
 import results_analysis
+import numpy as np
 
 
 def main():
-    print("Running all strategies...\n")
+    strategies = ["uniform", "direct", "inverse"]
+    all_results = {strategy: {"min_cut_probs": [], "avg_cut_sizes": [], "runtime_stats": []} for strategy in strategies}
 
-    # Strategies to test
-    strategies = ['uniform', 'direct', 'inverse']
+    print("\nRunning all strategies...\n")
 
-    # Collect metrics for all strategies
-    all_results = {}
+    num_runs = 5  # Run each strategy multiple times for more data points
+
+    for _ in range(num_runs):
+        for strategy in strategies:
+            print(f"Running {strategy} bias strategy...")
+            min_cut_prob, avg_cut_size, runtime_stats = experiments.run_experiment(strategy)
+
+            # Collecting data for each run
+            all_results[strategy]["min_cut_probs"].append(min_cut_prob)
+            all_results[strategy]["avg_cut_sizes"].append(avg_cut_size)
+
+            # Collect runtime stats (accumulate averages, mins, and maxes for each run)
+            all_results[strategy]["runtime_stats"].append(runtime_stats)
+
+    # Aggregate runtime stats for bar plot (average across runs)
     for strategy in strategies:
-        print(f"Running {strategy} bias strategy...")
-        min_cut_prob, avg_cut_size, runtime_stats = experiments.run_experiment(strategy)
-        all_results[strategy] = {
-            'min_cut_prob': min_cut_prob,
-            'avg_cut_size': avg_cut_size,
-            'runtime_stats': runtime_stats
-        }
-        print(f"Strategy: {strategy}")
-        print(f"Min-Cut Probability: {min_cut_prob}")
-        print(f"Average Cut Size: {avg_cut_size}")
-        print(f"Runtime Stats: {runtime_stats}\n")
+        runtime_stats = all_results[strategy]["runtime_stats"]
+        avg_runtimes = [run["average"] for run in runtime_stats]
+        min_runtimes = [run["min"] for run in runtime_stats]
+        max_runtimes = [run["max"] for run in runtime_stats]
 
-    print("\nGenerating visualizations...")
+        # Calculate overall average, min, max runtime stats for bar plot
+        all_results[strategy]["runtime_stats"] = {
+            "average": np.mean(avg_runtimes),
+            "min": np.min(min_runtimes),
+            "max": np.max(max_runtimes)
+        }
+
+    # Pass data to results analysis for visualization
     results_analysis.analyze_and_visualize(all_results)
 
 

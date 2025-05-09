@@ -5,30 +5,40 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_min_cut_probability(strategies, probabilities):
+def plot_min_cut_probability_box(strategies, probabilities):
     plt.figure(figsize=(10, 6))
-    plt.bar(strategies, probabilities, color=['blue', 'green', 'red'])
+    plt.boxplot(probabilities, labels=strategies, patch_artist=True,
+                boxprops=dict(facecolor='blue', alpha=0.7),
+                medianprops=dict(color='black'))
     plt.xlabel('Strategy')
     plt.ylabel('Min-Cut Probability')
-    plt.title('Min-Cut Probability by Strategy')
-    plt.ylim(0, 1)
+    plt.title('Min-Cut Probability Distribution by Strategy')
+    plt.ylim(0, 1.1)
     plt.xticks(rotation=45)
+    plt.grid(alpha=0.3)
     plt.tight_layout()
     plt.show()
 
 
-def plot_average_cut_size(strategies, avg_cut_sizes):
+def plot_average_cut_size_box(strategies, avg_cut_sizes):
     plt.figure(figsize=(10, 6))
-    plt.bar(strategies, avg_cut_sizes, color=['blue', 'green', 'red'])
+    plt.boxplot(avg_cut_sizes, labels=strategies, patch_artist=True,
+                boxprops=dict(facecolor='green', alpha=0.7),
+                medianprops=dict(color='black'))
     plt.xlabel('Strategy')
     plt.ylabel('Average Cut Size')
-    plt.title('Average Cut Size by Strategy')
+    plt.title('Average Cut Size Distribution by Strategy')
     plt.xticks(rotation=45)
+    plt.grid(alpha=0.3)
     plt.tight_layout()
     plt.show()
 
 
-def plot_runtime_stats(strategies, avg_runtimes, min_runtimes, max_runtimes):
+def plot_runtime_stats(strategies, runtimes):
+    avg_runtimes = [stats['average'] for stats in runtimes]
+    min_runtimes = [stats['min'] for stats in runtimes]
+    max_runtimes = [stats['max'] for stats in runtimes]
+
     x = np.arange(len(strategies))
     width = 0.25
 
@@ -44,18 +54,3 @@ def plot_runtime_stats(strategies, avg_runtimes, min_runtimes, max_runtimes):
     plt.legend()
     plt.tight_layout()
     plt.show()
-
-
-def generate_plots(data):
-    """ Generate all visualizations based on the provided data dictionary. """
-    strategies = data['strategy']
-    min_cut_probs = data['min_cut_prob']
-    avg_cut_sizes = data['avg_cut_size']
-    avg_runtimes = data['runtime_avg']
-    min_runtimes = data['runtime_min']
-    max_runtimes = data['runtime_max']
-
-    # Generate the three plots
-    plot_min_cut_probability(strategies, min_cut_probs)
-    plot_average_cut_size(strategies, avg_cut_sizes)
-    plot_runtime_stats(strategies, avg_runtimes, min_runtimes, max_runtimes)
