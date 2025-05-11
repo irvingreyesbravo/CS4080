@@ -31,7 +31,7 @@ def plot_min_cut_probability_box(strategies, probabilities):
     plt.xlabel('Strategy')
     plt.ylabel('Min-Cut Probability')
     plt.title('Min-Cut Probability Distribution by Strategy with Confidence Intervals')
-    plt.ylim(0, 1.1)
+    plt.ylim(0.6, 1.1)
     plt.xticks(rotation=45)
     plt.grid(alpha=0.3)
     plt.tight_layout()
